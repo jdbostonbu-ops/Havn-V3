@@ -16,7 +16,7 @@ This is the **v3** styling pass. It reuses the working logic from v2 (Leaflet ma
 
 ---
 
-# Internationalization
+## Internationalization
 HAVN's language picker lists 69 languages. 13 languages ship with hand-written translations: English, Spanish, French, German, Portuguese, Simplified Chinese, Japanese, Korean, Arabic, Russian, Vietnamese, Filipino, and Haitian Creole. Right-to-left layout is automatically applied for Arabic, Hebrew, Urdu, Persian, and Pashto.
 Languages without translation files fall back to English string-by-string, while still setting <html lang> correctly so screen readers pronounce content appropriately.
 Production translation for the remaining ~56 languages is a planned expansion — likely via DeepL or Google Cloud Translate run once and committed as JSON files, with optional native-speaker review for the highest-volume languages.
