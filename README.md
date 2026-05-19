@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="HAVN-logo-wordmark.png" alt="Havn logo" width="400">
+  <img src="HAVN-logo-wordmark.png" alt="Havn logo" width="600">
 </p>
 
 ## 👤 Author
@@ -15,6 +15,11 @@ Find food, shelter, healthcare, transit, clothing, warming, and cooling resource
 This is the **v3** styling pass. It reuses the working logic from v2 (Leaflet map, Firebase Firestore live sync, ZIP search, mock pin fallback, post flow, emergency mode) and applies the **Deep Forest + Sage Teal + Warm Cream** theme from `HAVN-Mockup.png` — Fraunces serif headlines, Inter body text, Ember accents for emergency mode. No pink.
 
 ---
+
+# Internationalization
+HAVN's language picker lists 69 languages. 13 languages ship with hand-written translations: English, Spanish, French, German, Portuguese, Simplified Chinese, Japanese, Korean, Arabic, Russian, Vietnamese, Filipino, and Haitian Creole. Right-to-left layout is automatically applied for Arabic, Hebrew, Urdu, Persian, and Pashto.
+Languages without translation files fall back to English string-by-string, while still setting <html lang> correctly so screen readers pronounce content appropriately.
+Production translation for the remaining ~56 languages is a planned expansion — likely via DeepL or Google Cloud Translate run once and committed as JSON files, with optional native-speaker review for the highest-volume languages.
 
 ## Files
 
