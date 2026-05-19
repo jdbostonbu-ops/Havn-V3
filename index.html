@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0F3D2E" />
+  <meta name="description" content="HAVN — Real-time community coordination platform. Help nearby." />
+  <title>HAVN — Help nearby</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="HAVN-logo-mark-only.png" type="image/png" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <div class="app" id="app" data-screen="map" data-emergency="off">
+
+    <!-- ====== SCREEN 1: HOME / LIVE MAP ====== -->
+    <section class="screen" id="screen-map" aria-label="Live map of nearby resources">
+      <header class="topbar">
+        <div class="topbar__brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="22" height="22" focusable="false" aria-hidden="true">
+              <path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1Z"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="brand-text">
+            <h1 class="brand-name">HAVN</h1>
+            <p class="brand-tag" data-i18n="brand.tagline">Help nearby.</p>
+          </div>
+        </div>
+        <button class="topbar__bell" type="button" aria-label="Open alerts" id="btn-bell">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2H4.5L6 17Zm4 4a2 2 0 0 0 4 0"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="dot" aria-hidden="true"></span>
+        </button>
+      </header>
+
+      <nav class="chips" aria-label="Resource categories">
+        <button class="chip chip--active" type="button" data-filter="All" aria-pressed="true" data-i18n="chip.all">All</button>
+        <button class="chip" type="button" data-filter="Food" aria-pressed="false">
+          <span class="chip__dot chip__dot--food" aria-hidden="true"></span><span data-i18n="chip.food">Food</span>
+        </button>
+        <button class="chip" type="button" data-filter="Shelter" aria-pressed="false">
+          <span class="chip__dot chip__dot--shelter" aria-hidden="true"></span><span data-i18n="chip.shelter">Shelter</span>
+        </button>
+        <button class="chip" type="button" data-filter="Healthcare" aria-pressed="false">
+          <span class="chip__dot chip__dot--healthcare" aria-hidden="true"></span><span data-i18n="chip.healthcare">Healthcare</span>
+        </button>
+        <button class="chip" type="button" data-filter="Transit" aria-pressed="false">
+          <span class="chip__dot chip__dot--transit" aria-hidden="true"></span><span data-i18n="chip.transit">Transit</span>
+        </button>
+        <button class="chip" type="button" data-filter="Clothing" aria-pressed="false">
+          <span class="chip__dot chip__dot--clothing" aria-hidden="true"></span><span data-i18n="chip.clothing">Clothing</span>
+        </button>
+        <button class="chip" type="button" data-filter="Showers" aria-pressed="false">
+          <span class="chip__dot chip__dot--showers" aria-hidden="true"></span><span data-i18n="chip.showers">Showers</span>
+        </button>
+        <button class="chip" type="button" data-filter="Warming" aria-pressed="false">
+          <span class="chip__dot chip__dot--warming" aria-hidden="true"></span><span data-i18n="chip.warming">Warming</span>
+        </button>
+        <button class="chip" type="button" data-filter="Cooling" aria-pressed="false">
+          <span class="chip__dot chip__dot--cooling" aria-hidden="true"></span><span data-i18n="chip.cooling">Cooling</span>
+        </button>
+      </nav>
+
+      <form class="searchbar" role="search" aria-label="Search resources by ZIP code" id="zip-form">
+        <label class="searchbar__label" for="zip-input" data-i18n="search.label">Search by ZIP code</label>
+        <div class="searchbar__inner">
+          <svg class="searchbar__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+            <path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <input id="zip-input" name="zip-input" type="text" inputmode="numeric"
+                 pattern="[0-9]*" maxlength="5" placeholder="Search by ZIP code…"
+                 data-i18n-attr="placeholder" data-i18n="search.placeholder"
+                 autocomplete="postal-code" />
+          <button class="zip-submit" type="submit" data-i18n="search.go">Go</button>
+        </div>
+        <p class="searchbar__hint" id="zip-feedback" aria-live="polite"></p>
+      </form>
+
+      <button class="alert-banner" id="alert-banner" type="button">
+        <span class="alert-banner__icon" aria-hidden="true">⚠</span>
+        <span class="alert-banner__text">
+          <strong id="alert-banner-title" data-i18n="alert.defaultTitle">Cold Weather Alert</strong>
+          <span id="alert-banner-body" data-i18n="alert.defaultBody">Warming centers open nearby. Tap for alerts →</span>
+        </span>
+      </button>
+
+      <section class="map-card" aria-labelledby="map-heading">
+        <div class="map-card__header">
+          <div>
+            <h2 id="map-heading" data-i18n="map.heading">Live Resource Map</h2>
+            <p id="map-location-label">Showing Hartford, CT mock resources</p>
+          </div>
+          <span class="sync-pill" id="sync-status">Mock pins</span>
+        </div>
+        <div id="resource-map" class="resource-map" aria-label="Interactive real-time resource map"></div>
+      </section>
+
+      <button class="fab" type="button" aria-label="Post a new resource" id="btn-fab">
+        <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <section class="near-list" aria-labelledby="near-heading">
+        <header class="near-list__header">
+          <h2 id="near-heading" data-i18n="nearby.heading">Near you</h2>
+          <button class="link" type="button" id="btn-view-all" data-i18n="nearby.viewAll">View all</button>
+        </header>
+        <ul class="near-list__items" id="near-list"></ul>
+      </section>
+    </section>
+
+    <!-- ====== SCREEN 2: ALERTS ====== -->
+    <section class="screen" id="screen-alerts" aria-label="Alerts" hidden>
+      <header class="screen-header">
+        <h2 class="screen-header__title" data-i18n="alerts.title">Alerts</h2>
+        <p class="screen-header__sub" data-i18n="alerts.sub">Emergency, weather, and resource updates</p>
+      </header>
+      <ul class="alerts-list" id="alerts-list"></ul>
+    </section>
+
+    <!-- ====== SCREEN 3: SAVED ====== -->
+    <section class="screen" id="screen-saved" aria-label="Saved resources" hidden>
+      <header class="screen-header">
+        <h2 class="screen-header__title" data-i18n="saved.title">Saved</h2>
+        <p class="screen-header__sub" data-i18n="saved.sub">Your bookmarked places</p>
+      </header>
+      <ul class="saved-list" id="saved-list"></ul>
+      <p class="saved-empty" id="saved-empty" hidden data-i18n="saved.empty">
+        No saved resources yet. Tap the bookmark on any resource to save it for later.
+      </p>
+    </section>
+
+    <!-- ====== SCREEN 4: PROFILE ====== -->
+    <section class="screen" id="screen-profile" aria-label="Profile" hidden>
+      <header class="profile-header">
+        <div class="avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="40" height="40">
+            <circle cx="12" cy="9" r="4" fill="currentColor" opacity="0.85"/>
+            <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6" fill="currentColor" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="profile-header__text">
+          <p class="profile-header__welcome" data-i18n="profile.welcome">Welcome,</p>
+          <h2 class="profile-header__name">Jordan</h2>
+          <p class="profile-header__verified">
+            <span class="verified-pill">
+              <span aria-hidden="true">✓</span> <span data-i18n="profile.verified">Verified user</span>
+            </span>
+          </p>
+        </div>
+      </header>
+
+      <ul class="settings-list" role="list">
+        <li class="settings-row" id="row-my-posts" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">📍</span>
+          <span class="settings-row__label" data-i18n="profile.myPosts">My Posts</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+        <li class="settings-row" id="row-saved-places" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">⭐</span>
+          <span class="settings-row__label" data-i18n="profile.savedPlaces">Saved Places</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+        <li class="settings-row" id="row-notifications" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">🔔</span>
+          <span class="settings-row__label" data-i18n="profile.notifications">Notification Settings</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+        <li class="settings-row settings-row--toggle">
+          <span class="settings-row__icon" aria-hidden="true">🚨</span>
+          <label class="settings-row__label" for="toggle-emergency" data-i18n="profile.emergency">Emergency Mode</label>
+          <span class="toggle">
+            <input type="checkbox" id="toggle-emergency" name="toggle-emergency" />
+            <span class="toggle__track" aria-hidden="true"><span class="toggle__thumb"></span></span>
+          </span>
+        </li>
+        <li class="settings-row settings-row--select">
+          <span class="settings-row__icon" aria-hidden="true">🌐</span>
+          <label class="settings-row__label" for="lang-select" data-i18n="profile.language">Language</label>
+          <select id="lang-select" name="lang-select" class="lang-select">
+            <option value="en">English</option>
+            <option value="zh">中文 (Chinese, Simplified)</option>
+            <option value="zh-TW">繁體中文 (Chinese, Traditional)</option>
+            <option value="es">Español</option>
+            <option value="ar">العربية</option>
+            <option value="hi">हिन्दी</option>
+            <option value="bn">বাংলা</option>
+            <option value="pt">Português</option>
+            <option value="ru">Русский</option>
+            <option value="ja">日本語</option>
+            <option value="pa">ਪੰਜਾਬੀ</option>
+            <option value="de">Deutsch</option>
+            <option value="jv">Basa Jawa</option>
+            <option value="ko">한국어</option>
+            <option value="fr">Français</option>
+            <option value="te">తెలుగు</option>
+            <option value="mr">मराठी</option>
+            <option value="tr">Türkçe</option>
+            <option value="ta">தமிழ்</option>
+            <option value="vi">Tiếng Việt</option>
+            <option value="ur">اردو</option>
+            <option value="it">Italiano</option>
+            <option value="fa">فارسی</option>
+            <option value="gu">ગુજરાતી</option>
+            <option value="pl">Polski</option>
+            <option value="uk">Українська</option>
+            <option value="ml">മലയാളം</option>
+            <option value="kn">ಕನ್ನಡ</option>
+            <option value="or">ଓଡ଼ିଆ</option>
+            <option value="my">မြန်မာ</option>
+            <option value="th">ไทย</option>
+            <option value="su">Basa Sunda</option>
+            <option value="ro">Română</option>
+            <option value="nl">Nederlands</option>
+            <option value="ha">Hausa</option>
+            <option value="sw">Kiswahili</option>
+            <option value="am">አማርኛ</option>
+            <option value="yo">Yorùbá</option>
+            <option value="id">Bahasa Indonesia</option>
+            <option value="ms">Bahasa Melayu</option>
+            <option value="fil">Filipino</option>
+            <option value="el">Ελληνικά</option>
+            <option value="hu">Magyar</option>
+            <option value="cs">Čeština</option>
+            <option value="sv">Svenska</option>
+            <option value="he">עברית</option>
+            <option value="ne">नेपाली</option>
+            <option value="si">සිංහල</option>
+            <option value="km">ខ្មែរ</option>
+            <option value="lo">ລາວ</option>
+            <option value="ka">ქართული</option>
+            <option value="hy">Հայերեն</option>
+            <option value="az">Azərbaycanca</option>
+            <option value="kk">Қазақша</option>
+            <option value="uz">Oʻzbekcha</option>
+            <option value="ps">پښتو</option>
+            <option value="ig">Igbo</option>
+            <option value="zu">isiZulu</option>
+            <option value="xh">isiXhosa</option>
+            <option value="af">Afrikaans</option>
+            <option value="so">Soomaali</option>
+            <option value="ht">Kreyòl ayisyen</option>
+            <option value="fi">Suomi</option>
+            <option value="da">Dansk</option>
+            <option value="no">Norsk</option>
+            <option value="bg">Български</option>
+            <option value="sr">Српски</option>
+            <option value="hr">Hrvatski</option>
+            <option value="sk">Slovenčina</option>
+          </select>
+        </li>
+        <li class="settings-row" id="row-help" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">❓</span>
+          <span class="settings-row__label" data-i18n="profile.help">Help & Support</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+        <li class="settings-row" id="row-about" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">ℹ</span>
+          <span class="settings-row__label" data-i18n="profile.about">About HAVN</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+        <li class="settings-row settings-row--danger">
+          <span class="settings-row__icon" aria-hidden="true">⏻</span>
+          <span class="settings-row__label" data-i18n="profile.logout">Log Out</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+      </ul>
+
+      <footer class="role-footer">
+        <p><strong>Role:</strong> <span id="profile-role">Community Member</span></p>
+        <p><strong>Trust tier:</strong> <span id="profile-trust">Tier 2 · Verified</span></p>
+      </footer>
+    </section>
+
+    <!-- ====== BOTTOM NAV ====== -->
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="bottom-nav__btn bottom-nav__btn--active" type="button" data-nav="map" aria-pressed="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Zm0 0v14m6-12v14" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <span data-i18n="nav.map">Map</span>
+      </button>
+      <button class="bottom-nav__btn" type="button" data-nav="alerts" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2H4.5L6 17Zm4 4a2 2 0 0 0 4 0"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span data-i18n="nav.alerts">Alerts</span>
+      </button>
+      <button class="bottom-nav__btn" type="button" data-nav="saved" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="m12 4 2.6 5.3 5.9.8-4.3 4 1 5.9L12 17.3 6.8 20l1-5.9-4.3-4 5.9-.8L12 4Z"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+        <span data-i18n="nav.saved">Saved</span>
+      </button>
+      <button class="bottom-nav__btn" type="button" data-nav="profile" aria-pressed="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <circle cx="12" cy="9" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/>
+          <path d="M5 20c1.5-3.5 4.5-5 7-5s5.5 1.5 7 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span data-i18n="nav.profile">Profile</span>
+      </button>
+    </nav>
+
+    <!-- ====== OVERLAY: RESOURCE DETAIL ====== -->
+    <div class="overlay" id="overlay-detail" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <div class="overlay__backdrop" id="detail-backdrop"></div>
+      <article class="detail-card">
+        <header class="detail-card__hero">
+          <button class="detail-card__back" type="button" aria-label="Close details" id="btn-detail-close">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="m15 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </header>
+        <div class="detail-card__body">
+          <h2 class="detail-card__title" id="detail-title"></h2>
+          <p class="detail-card__verified" id="detail-verified">✓ Verified</p>
+          <ul class="detail-card__meta" id="detail-meta"></ul>
+          <p class="detail-card__status">
+            <span class="status-pill" id="detail-status"></span>
+          </p>
+          <p class="detail-card__hours" id="detail-hours"></p>
+          <p class="detail-card__desc" id="detail-desc"></p>
+
+          <div class="detail-card__actions">
+            <button class="btn btn--primary" type="button" id="btn-directions">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M12 2 22 12l-10 10L2 12 12 2Zm0 5v4h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Directions
+            </button>
+            <button class="btn btn--ghost" type="button" id="btn-save">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M6 4h12v17l-6-4-6 4V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+              <span id="btn-save-label">Save</span>
+            </button>
+            <button class="btn btn--ghost" type="button" id="btn-share">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <circle cx="6" cy="12" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="18" cy="6" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="18" cy="18" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="m8 11 8-4M8 13l8 4" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Share
+            </button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- ====== OVERLAY: POST FLOW ====== -->
+    <div class="overlay" id="overlay-post" hidden role="dialog" aria-modal="true" aria-labelledby="post-title">
+      <div class="overlay__backdrop" id="post-backdrop"></div>
+      <form class="post-form" id="post-form" novalidate>
+        <header class="post-form__header">
+          <button class="post-form__close" type="button" aria-label="Cancel" id="btn-post-close">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <h2 class="post-form__title" id="post-title">Post a Resource</h2>
+        </header>
+        <div class="post-form__body">
+          <fieldset class="cat-grid" aria-label="Choose a category">
+            <legend class="cat-grid__legend">What are you offering?</legend>
+            <label class="cat-tile" for="cat-food">
+              <input type="radio" name="category" id="cat-food" value="Food" />
+              <span class="cat-tile__icon cat-tile__icon--food" aria-hidden="true">🍲</span>
+              <span class="cat-tile__label">Food</span>
+            </label>
+            <label class="cat-tile" for="cat-shelter">
+              <input type="radio" name="category" id="cat-shelter" value="Shelter" />
+              <span class="cat-tile__icon cat-tile__icon--shelter" aria-hidden="true">🛏</span>
+              <span class="cat-tile__label">Shelter</span>
+            </label>
+            <label class="cat-tile" for="cat-healthcare">
+              <input type="radio" name="category" id="cat-healthcare" value="Healthcare" />
+              <span class="cat-tile__icon cat-tile__icon--healthcare" aria-hidden="true">➕</span>
+              <span class="cat-tile__label">Healthcare</span>
+            </label>
+            <label class="cat-tile" for="cat-transit">
+              <input type="radio" name="category" id="cat-transit" value="Transit" />
+              <span class="cat-tile__icon cat-tile__icon--transit" aria-hidden="true">🚌</span>
+              <span class="cat-tile__label">Transit</span>
+            </label>
+            <label class="cat-tile" for="cat-clothing">
+              <input type="radio" name="category" id="cat-clothing" value="Clothing" />
+              <span class="cat-tile__icon cat-tile__icon--clothing" aria-hidden="true">🧥</span>
+              <span class="cat-tile__label">Clothing</span>
+            </label>
+            <label class="cat-tile" for="cat-warming">
+              <input type="radio" name="category" id="cat-warming" value="Warming" />
+              <span class="cat-tile__icon cat-tile__icon--warming" aria-hidden="true">🔥</span>
+              <span class="cat-tile__label">Warming</span>
+            </label>
+            <label class="cat-tile" for="cat-showers">
+              <input type="radio" name="category" id="cat-showers" value="Showers" />
+              <span class="cat-tile__icon cat-tile__icon--showers" aria-hidden="true">🚿</span>
+              <span class="cat-tile__label">Showers</span>
+            </label>
+          </fieldset>
+
+          <div class="field">
+            <label class="field__label" for="post-title-input">Title</label>
+            <input class="field__input" id="post-title-input" name="post-title-input" type="text"
+                   placeholder="e.g., Free Hot Breakfast" maxlength="80" />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="post-start">Start time</label>
+              <input class="field__input" id="post-start" name="post-start" type="time" value="08:00" />
+            </div>
+            <div class="field">
+              <label class="field__label" for="post-end">End time</label>
+              <input class="field__input" id="post-end" name="post-end" type="time" value="11:00" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="post-location">Location</label>
+            <input class="field__input" id="post-location" name="post-location" type="text"
+                   placeholder="Use current location" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="post-notes">Notes (optional)</label>
+            <textarea class="field__input field__input--area" id="post-notes" name="post-notes" rows="3"
+                      placeholder="e.g., Hot breakfast, coffee, and snacks available."></textarea>
+          </div>
+        </div>
+        <footer class="post-form__footer">
+          <button class="btn btn--primary btn--full" type="submit" id="btn-publish">Publish</button>
+          <p class="post-form__hint" id="post-hint" aria-live="polite"></p>
+        </footer>
+      </form>
+    </div>
+
+    <!-- ====== OVERLAY: GENERIC INFO MODAL (My Posts, Notifications, Help, About) ====== -->
+    <div class="overlay" id="overlay-info" hidden role="dialog" aria-modal="true" aria-labelledby="info-title">
+      <div class="overlay__backdrop" id="info-backdrop"></div>
+      <article class="info-card">
+        <header class="info-card__header">
+          <button class="info-card__close" type="button" aria-label="Close" id="btn-info-close">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <h2 class="info-card__title" id="info-title">Title</h2>
+        </header>
+        <div class="info-card__body" id="info-body"></div>
+      </article>
+    </div>
+
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+  </div>
+</body>
+</html>
