@@ -1,3 +1,12 @@
+<p align="center">
+  <img src="HAVN-logo-wordmark.png" alt="Havn logo" width="400">
+</p>
+
+## 👤 Author
+**Jacqueline**
+[Check out my GitHub Profile](https://github.com/jdbostonbu-ops)
+🚀 **[Try the Live App](https://jdbostonbu-ops.github.io/Havn-V3/)**
+
 # HAVN — v3 (Deep Forest theme)
 
 Real-time community coordination app — mobile-first PWA prototype.
@@ -220,3 +229,7 @@ Modern evergreen browsers. ES modules are required (Chrome 63+, Firefox 60+, Saf
 - Visible `:focus-visible` rings on every interactive element
 - `prefers-reduced-motion` respected (animations collapse to ~0 ms)
 - Pin markers carry semantic labels ("St. Luke's — Food — OPEN") for screen readers
+
+<p align="center">
+  <img src="HAVN-logo-app-icon.png" alt="Havn logo" width="200">
+</p>
