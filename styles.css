@@ -114,7 +114,7 @@ h1, h2, h3, p { margin: 0; }
 .topbar {
   background: var(--forest);
   color: var(--cream);
-  padding: 14px 16px 18px;
+  padding: max(14px, calc(env(safe-area-inset-top) + 10px)) 16px 18px;
   margin: 0 -16px;
   border-bottom-left-radius: 24px;
   border-bottom-right-radius: 24px;
@@ -165,7 +165,7 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* ============== Search bar (sits between chips and alert banner) ============== */
-.searchbar { margin: 14px 4px 0; padding: 0; position: relative; z-index: 1; }
+.searchbar { margin: 10px 4px 0; padding: 0; position: relative; z-index: 1; }
 .searchbar__label {
   position: absolute;
   width: 1px; height: 1px;
@@ -211,11 +211,11 @@ h1, h2, h3, p { margin: 0; }
 
 /* ============== Chips ============== */
 .chips {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 4px 6px;
+  padding: 4px 4px 4px;
   scrollbar-width: none;
 }
 .chips::-webkit-scrollbar { display: none; }
@@ -251,14 +251,14 @@ h1, h2, h3, p { margin: 0; }
 
 /* ============== Alert banner (amber/ember) ============== */
 .alert-banner {
-  margin: 12px 4px 0;
+  margin: 8px 4px 0;
   width: calc(100% - 8px);
   text-align: left;
   background: var(--amber-50);
   border: 1px solid #F0D896;
   border-left: 4px solid var(--amber);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 10px 14px;
   display: flex; gap: 12px; align-items: flex-start;
   color: #6B4316;
   cursor: pointer;
