@@ -906,15 +906,44 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
   let toastTimer = null;
 
   // ---------- Rendering ----------
+  // Haversine distance in kilometers between two lat/lng points.
+  // Used to filter "Near you" resources by proximity to the map center,
+  // so a user viewing NYC doesn't see Miami/LA cards in the list.
+  const distanceKm = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth radius in km
+    const toRad = (deg) => deg * Math.PI / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat/2) ** 2 +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLng/2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  };
+
+  // Resources within ~160 km (100 mi) of the current map center.
+  // Tuned to include the broader metro region — e.g. viewing NYC also
+  // surfaces New Haven and Hartford pins. User-posted pins without
+  // coordinates always pass through.
+  const NEARBY_RADIUS_KM = 160;
+
   const visibleResources = () => {
     let state = store.get();
-    // Filter first by the active ZIP so the demo cards only show
-    // resources for the city the user is viewing. User-posted pins
-    // (which don't carry a `city` tag) always pass through.
-    let inCity = state.resources.filter((resource) =>
-      !resource.city || resource.city === state.currentZip);
-    if (state.filter === 'All') return inCity;
-    return inCity.filter((resource) => resource.category === state.filter);
+    let center = state.mapCenter;
+    // Filter to nearby, then sort ascending by distance so the closest
+    // resources surface first in the "Near you" card list.
+    // Pins without coordinates sort to the end.
+    let withDistance = state.resources
+      .map((resource) => {
+        let d = (typeof resource.latitude === 'number' && typeof resource.longitude === 'number')
+          ? distanceKm(center.lat, center.lng, resource.latitude, resource.longitude)
+          : Infinity;
+        return { resource, d };
+      })
+      .filter(({ resource, d }) => d === Infinity || d <= NEARBY_RADIUS_KM)
+      .sort((a, b) => a.d - b.d)
+      .map(({ resource }) => resource);
+    if (state.filter === 'All') return withDistance;
+    return withDistance.filter((resource) => resource.category === state.filter);
   };
 
   const toast = (message) => {

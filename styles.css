@@ -669,7 +669,8 @@ h1, h2, h3, p { margin: 0; }
 /* ============== Overlays ============== */
 .overlay {
   position: fixed; inset: 0; z-index: 100;
-  display: flex; align-items: flex-end; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
 }
 .overlay[hidden] { display: none; }
 .overlay__backdrop {
@@ -679,6 +680,18 @@ h1, h2, h3, p { margin: 0; }
 @keyframes slide-up {
   from { transform: translateY(20px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* On narrow mobile viewports, keep the classic bottom-sheet feel */
+@media (max-width: 640px) {
+  .overlay { align-items: flex-end; padding: 0; }
+}
+
+/* On desktop the cards are centered modals, not bottom sheets — round all corners */
+@media (min-width: 641px) {
+  .detail-card,
+  .post-card,
+  .info-card { border-radius: var(--radius-xl); }
 }
 
 /* ============== Detail card ============== */
