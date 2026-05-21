@@ -1,0 +1,33 @@
+{
+  "name": "HAVN — Help Nearby",
+  "short_name": "HAVN",
+  "description": "Real-time community coordination — find food, shelter, healthcare, transit, and more nearby.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F1E8",
+  "theme_color": "#0F3D2E",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "HAVN-logo-app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "HAVN-logo-app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "HAVN-logo-mark-only.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["social", "utilities", "lifestyle"]
+}

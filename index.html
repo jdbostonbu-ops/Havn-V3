@@ -12,8 +12,22 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="HAVN-logo-mark-only.png" type="image/png" />
+  <link rel="apple-touch-icon" href="HAVN-logo-app-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="HAVN" />
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="app.js"></script>
+  <script>
+    // Register the service worker so the browser will offer "Add to Home Screen"
+    // (PWA install). Only registers in production where /sw.js exists.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* Dev only — fine if missing */ });
+      });
+    }
+  </script>
 </head>
 <body>
   <div class="app" id="app" data-screen="map" data-emergency="off">
