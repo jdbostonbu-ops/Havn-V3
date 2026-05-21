@@ -144,7 +144,7 @@
     <!-- ====== SCREEN 4: PROFILE ====== -->
     <section class="screen" id="screen-profile" aria-label="Profile" hidden>
       <header class="profile-header">
-        <div class="avatar" aria-hidden="true">
+        <div class="avatar" id="profile-avatar" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="40" height="40">
             <circle cx="12" cy="9" r="4" fill="currentColor" opacity="0.85"/>
             <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6" fill="currentColor" opacity="0.85"/>
@@ -152,14 +152,26 @@
         </div>
         <div class="profile-header__text">
           <p class="profile-header__welcome" data-i18n="profile.welcome">Welcome,</p>
-          <h2 class="profile-header__name">Jordan</h2>
-          <p class="profile-header__verified">
+          <h2 class="profile-header__name" id="profile-name">Guest</h2>
+          <p class="profile-header__verified" id="profile-verified-pill">
             <span class="verified-pill">
               <span aria-hidden="true">✓</span> <span data-i18n="profile.verified">Verified user</span>
             </span>
           </p>
+          <p class="profile-header__signedout" id="profile-signedout-hint" hidden>
+            Sign in to post resources and save places.
+          </p>
         </div>
       </header>
+
+      <!-- Sign-in row, shown only when logged out -->
+      <ul class="settings-list" role="list" id="signin-list" hidden>
+        <li class="settings-row settings-row--signin" id="row-signin" tabindex="0" role="button">
+          <span class="settings-row__icon" aria-hidden="true">🔑</span>
+          <span class="settings-row__label">Sign in with Google</span>
+          <span class="settings-row__chev" aria-hidden="true">›</span>
+        </li>
+      </ul>
 
       <ul class="settings-list" role="list">
         <li class="settings-row" id="row-my-posts" tabindex="0" role="button">
@@ -270,7 +282,7 @@
           <span class="settings-row__label" data-i18n="profile.about">About HAVN</span>
           <span class="settings-row__chev" aria-hidden="true">›</span>
         </li>
-        <li class="settings-row settings-row--danger">
+        <li class="settings-row settings-row--danger" id="row-logout" tabindex="0" role="button">
           <span class="settings-row__icon" aria-hidden="true">⏻</span>
           <span class="settings-row__label" data-i18n="profile.logout">Log Out</span>
           <span class="settings-row__chev" aria-hidden="true">›</span>

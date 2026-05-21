@@ -1,0 +1,50 @@
+# ─── HAVN .gitignore ───────────────────────────────────────
+# Firebase web API keys are public-by-design, so firebaseConfig
+# in app.js is FINE to commit. What we DON'T commit:
+
+# Service account credentials (if you ever add a backend with
+# Firebase Admin SDK, these would be highly sensitive)
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+firebase-debug.log
+firebase-debug.*.log
+
+# Firebase emulator suite local data
+.firebase/
+.firebaserc.local
+
+# Local environment files (for any future backend)
+.env
+.env.local
+.env.*.local
+
+# Dependency directories (in case you add npm tooling later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build output (in case you add bundling)
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# One-time seed tool — keep this out of production builds.
+# The seed.html file contains the same firebaseConfig as app.js,
+# but it's a developer tool and shouldn't be deployed publicly.
+# Uncomment the next line if you want git to ignore it:
+# seed.html

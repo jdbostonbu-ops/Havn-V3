@@ -984,3 +984,28 @@ html[dir="rtl"] .near-card__chev { transform: scaleX(-1); }
   max-width: calc(100vw - 32px);
   animation: slide-up 0.18s ease-out;
 }
+
+/* ════════════════════════════════════════════════════════════════
+   AUTH UI — sign-in row and signed-out hint
+   Added when wiring Google sign-in via Firebase Auth. Keeps the
+   visual language of the existing settings rows but with a more
+   prominent treatment so signed-out users notice the CTA.
+   ════════════════════════════════════════════════════════════════ */
+.settings-row--signin {
+  background: #F4F1E8;
+  color: #0F3D2E;
+  font-weight: 700;
+  border: 2px solid #0F3D2E;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.settings-row--signin:hover,
+.settings-row--signin:focus-visible {
+  background: #0F3D2E;
+  color: #F4F1E8;
+}
+.profile-header__signedout {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: 6px;
+}

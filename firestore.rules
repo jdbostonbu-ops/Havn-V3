@@ -1,0 +1,78 @@
+// firestore.rules
+//
+// HAVN Firestore Security Rules
+// ─────────────────────────────────────────────────────────────
+// Philosophy: the map is public information (anyone can read).
+// Writing requires Google sign-in, which guarantees a verified email
+// because Google's accounts are pre-verified. We additionally check
+// that users can only edit/delete posts they created themselves.
+//
+// To deploy: copy this to a file called `firestore.rules` at your
+// project root, then run `firebase deploy --only firestore:rules`.
+// Or paste into Firebase Console → Firestore → Rules tab and Publish.
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── /resources/{id} ────────────────────────────────────
+    // Public map data. Anyone can read. Only signed-in users with
+    // a verified email can create. Update/delete only by the
+    // original poster (matched via provider_id == auth.uid).
+    match /resources/{resourceId} {
+
+      // Anyone can read the public resource map — no login required.
+      allow read: if true;
+
+      // Create: must be signed in, must have a verified email
+      // (Google sign-in always provides this), and must stamp the
+      // resource with their own uid as provider_id (prevents
+      // impersonation), and must include the required fields.
+      allow create: if
+        request.auth != null
+        && request.auth.token.email_verified == true
+        && request.resource.data.provider_id == request.auth.uid
+        && request.resource.data.keys().hasAll(['category', 'title', 'latitude', 'longitude', 'provider_id'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() < 200
+        && request.resource.data.category in ['Food','Shelter','Healthcare','Transit','Clothing','Showers','Warming','Cooling']
+        && request.resource.data.latitude is number
+        && request.resource.data.longitude is number
+        // Latitude/longitude sanity check
+        && request.resource.data.latitude >= -90
+        && request.resource.data.latitude <= 90
+        && request.resource.data.longitude >= -180
+        && request.resource.data.longitude <= 180;
+
+      // Update: only the original poster, and they can't change provider_id
+      // (so they can't "transfer ownership" or impersonate).
+      allow update: if
+        request.auth != null
+        && request.auth.uid == resource.data.provider_id
+        && request.resource.data.provider_id == resource.data.provider_id;
+
+      // Delete: only the original poster.
+      allow delete: if
+        request.auth != null
+        && request.auth.uid == resource.data.provider_id;
+    }
+
+    // ─── /users/{uid} ──────────────────────────────────────
+    // Optional user profile docs. Anyone can read public profile
+    // info (name, photo). A user can only write to their own doc.
+    match /users/{uid} {
+      allow read: if true;
+      allow write: if
+        request.auth != null
+        && request.auth.uid == uid;
+    }
+
+    // Everything else: deny by default. Don't add other collections
+    // without thinking through their rules.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

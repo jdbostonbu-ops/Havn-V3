@@ -1,5 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
-import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { getFirestore, collection, addDoc, onSnapshot, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 
 (() => {
   'use strict';
@@ -333,12 +334,13 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
 
 
   const firebaseConfig = {
-    apiKey: 'PASTE_FIREBASE_API_KEY',
-    authDomain: 'PASTE_FIREBASE_AUTH_DOMAIN',
-    projectId: 'PASTE_FIREBASE_PROJECT_ID',
-    storageBucket: 'PASTE_FIREBASE_STORAGE_BUCKET',
-    messagingSenderId: 'PASTE_FIREBASE_MESSAGING_SENDER_ID',
-    appId: 'PASTE_FIREBASE_APP_ID'
+    apiKey: 'AIzaSyB0aCm9Vfyawq2OiRtbsYWMZOz-BoCAUmg',
+    authDomain: 'havn-app-cad46.firebaseapp.com',
+    projectId: 'havn-app-cad46',
+    storageBucket: 'havn-app-cad46.firebasestorage.app',
+    messagingSenderId: '850316577510',
+    appId: '1:850316577510:web:bc43da923b13681dba4927',
+    measurementId: 'G-5GRHKYYPM3'
   };
 
   const categoryEmoji = {
@@ -686,24 +688,44 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
   };
   const dom = createDom();
 
-  // ---------- Firebase client (no-op until config pasted) ----------
+  // ---------- Firebase client (Firestore + Auth) ----------
+  // Tracks the currently signed-in user. The auth state is the source
+  // of truth for whether the user can post resources. Listeners can
+  // subscribe via onAuthChange to update UI when sign-in/out happens.
   const createFirebaseClient = () => {
     let db = null;
+    let auth = null;
+    let currentUser = null;
     let enabled = false;
+    let authChangeCallbacks = [];
+
     const hasConfig = () =>
       firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('PASTE_') &&
       firebaseConfig.projectId && !firebaseConfig.projectId.startsWith('PASTE_');
+
     const init = () => {
       if (!hasConfig()) return false;
       try {
-        db = getFirestore(initializeApp(firebaseConfig));
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        auth = getAuth(app);
         enabled = true;
+        // Subscribe to auth state changes so we always know who's signed
+        // in. Fired on page load with the cached user (if any) so UI
+        // restores correctly after refresh.
+        onAuthStateChanged(auth, (user) => {
+          currentUser = user;
+          authChangeCallbacks.forEach((cb) => {
+            try { cb(user); } catch (e) { console.warn('auth callback error', e); }
+          });
+        });
         return true;
       } catch (error) {
         console.warn('Firebase disabled:', error);
         return false;
       }
     };
+
     const listenResources = (callback) => {
       if (!enabled || !db) return () => {};
       return onSnapshot(collection(db, 'resources'), (snapshot) => {
@@ -729,12 +751,57 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
         callback(items.filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude)));
       });
     };
+
+    // Add a resource. Requires sign-in — without auth, the Firestore
+    // security rules will reject the write. The resource is stamped
+    // with provider_id = currentUser.uid so the user can later
+    // edit/delete their own posts and so the "My Posts" filter works.
     const addResource = async (resource) => {
       if (!enabled || !db) return false;
-      await addDoc(collection(db, 'resources'), { ...resource, created_at: serverTimestamp() });
+      if (!currentUser) {
+        const err = new Error('Sign in to post resources');
+        err.code = 'auth/required';
+        throw err;
+      }
+      await addDoc(collection(db, 'resources'), {
+        ...resource,
+        provider_id: currentUser.uid,
+        provider_name: currentUser.displayName || 'Anonymous',
+        created_at: serverTimestamp()
+      });
       return true;
     };
-    return { init, listenResources, addResource, isEnabled: () => enabled };
+
+    // Sign in with Google. Opens a popup, returns the signed-in user.
+    // Throws if popup is blocked or user cancels.
+    const signInWithGoogle = async () => {
+      if (!enabled || !auth) throw new Error('Firebase not initialized');
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      return result.user;
+    };
+
+    const signOutUser = async () => {
+      if (!enabled || !auth) return;
+      await signOut(auth);
+    };
+
+    // Subscribe to auth state changes. Returns an unsubscribe function.
+    const onAuthChange = (callback) => {
+      authChangeCallbacks.push(callback);
+      // Fire immediately with current value so subscribers see initial state
+      if (currentUser !== null || enabled) callback(currentUser);
+      return () => {
+        authChangeCallbacks = authChangeCallbacks.filter((c) => c !== callback);
+      };
+    };
+
+    return {
+      init, listenResources, addResource,
+      signInWithGoogle, signOutUser, onAuthChange,
+      getCurrentUser: () => currentUser,
+      isEnabled: () => enabled
+    };
   };
 
   // ---------- Store (localStorage-backed) ----------
@@ -945,6 +1012,46 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
     resources.forEach((resource) => host.appendChild(buildResourceCard(resource)));
   };
 
+  // Update the profile screen and any auth-gated UI when the user
+  // signs in or out. Driven by the Firebase onAuthStateChanged callback.
+  const renderAuthUI = (user) => {
+    const nameEl = dom.get('#profile-name');
+    const avatarEl = dom.get('#profile-avatar');
+    const verifiedPill = dom.get('#profile-verified-pill');
+    const signedOutHint = dom.get('#profile-signedout-hint');
+    const signinList = dom.get('#signin-list');
+    const logoutRow = dom.get('#row-logout');
+
+    if (user) {
+      // Signed in via Google
+      if (nameEl) dom.setText(nameEl, user.displayName || 'Friend');
+      if (verifiedPill) verifiedPill.hidden = false;
+      if (signedOutHint) signedOutHint.hidden = true;
+      if (signinList) signinList.hidden = true;
+      if (logoutRow) logoutRow.hidden = false;
+      // Swap default avatar SVG for the user's Google profile photo if present
+      if (avatarEl && user.photoURL) {
+        avatarEl.replaceChildren();
+        const img = dom.make('img');
+        img.src = user.photoURL;
+        img.alt = (user.displayName || 'User') + ' avatar';
+        img.referrerPolicy = 'no-referrer';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.borderRadius = '50%';
+        img.style.objectFit = 'cover';
+        avatarEl.appendChild(img);
+      }
+    } else {
+      // Signed out — show Guest state with sign-in CTA
+      if (nameEl) dom.setText(nameEl, 'Guest');
+      if (verifiedPill) verifiedPill.hidden = true;
+      if (signedOutHint) signedOutHint.hidden = false;
+      if (signinList) signinList.hidden = false;
+      if (logoutRow) logoutRow.hidden = true;
+    }
+  };
+
   const renderAll = () => {
     renderStatus();
     renderResources();
@@ -1105,11 +1212,34 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
       }
       closePost();
       toast(pushed ? 'Posted to Firebase live map' : 'Posted as local mock pin');
-    } catch (_) {
-      store.addResource(resource);
-      renderAll();
-      closePost();
-      toast('Firebase unavailable — saved as local mock pin');
+    } catch (err) {
+      // If Firebase rejected because user isn't signed in, prompt
+      // sign-in. Most likely cause given our security rules: write
+      // requires request.auth != null && email_verified == true.
+      if (err && err.code === 'auth/required') {
+        dom.setText(dom.get('#post-hint'), 'Please sign in to publish — opening Google sign-in…');
+        try {
+          await firebaseClient.signInWithGoogle();
+          // Retry the publish now that we're signed in
+          dom.setText(dom.get('#post-hint'), 'Publishing…');
+          let pushed = await firebaseClient.addResource(resource);
+          if (!pushed) {
+            store.addResource(resource);
+            renderAll();
+          }
+          closePost();
+          toast(pushed ? 'Posted to Firebase live map' : 'Posted as local mock pin');
+        } catch (signInErr) {
+          dom.setText(dom.get('#post-hint'),
+            'Sign-in canceled. You need a Google account to post.');
+        }
+      } else {
+        // Other failures (network, rules rejection) — fall back to local
+        store.addResource(resource);
+        renderAll();
+        closePost();
+        toast('Firebase unavailable — saved as local mock pin');
+      }
     }
   };
 
@@ -1434,6 +1564,29 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
     bindRowOpen('#row-help', () => openInfoModal('help'));
     bindRowOpen('#row-about', () => openInfoModal('about'));
 
+    // Auth — sign in with Google
+    bindRowOpen('#row-signin', async () => {
+      try {
+        await firebaseClient.signInWithGoogle();
+        toast('Signed in. You can now post resources.');
+      } catch (err) {
+        // User canceled or popup blocked — quiet fail
+        if (err && err.code !== 'auth/popup-closed-by-user') {
+          toast('Sign-in failed. Please try again.');
+        }
+      }
+    });
+
+    // Auth — sign out
+    bindRowOpen('#row-logout', async () => {
+      try {
+        await firebaseClient.signOutUser();
+        toast('Signed out.');
+      } catch (_) {
+        toast('Sign-out failed.');
+      }
+    });
+
     // Info modal close
     dom.get('#btn-info-close').addEventListener('click', closeInfoModal);
     dom.get('#info-backdrop').addEventListener('click', closeInfoModal);
@@ -1479,13 +1632,22 @@ import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from 'h
     }
     let firebaseReady = firebaseClient.init();
     if (firebaseReady) {
-      await seedFirestore();
+      // NOTE: We no longer auto-seed from the client because Firestore
+      // security rules require an authenticated user with email_verified
+      // to write. Use the separate `seed.html` tool to seed mock pins
+      // once (sign in with your own Google account, click "Seed Firestore").
       firebaseClient.listenResources((items) => {
         if (items.length) {
           store.setResources(items);
           renderAll();
         }
       });
+      // Subscribe to auth state changes — updates the profile screen
+      // (name, avatar, verified pill) when user signs in or out.
+      firebaseClient.onAuthChange(renderAuthUI);
+    } else {
+      // Firebase not connected — still render the signed-out profile state
+      renderAuthUI(null);
     }
     renderAll();
 
