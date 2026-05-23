@@ -11,19 +11,19 @@
   "lang": "en",
   "icons": [
     {
-      "src": "HAVN-logo-app-icon.png",
+      "src": "hayvn-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "HAVN-logo-app-icon.png",
+      "src": "hayvn-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "HAVN-logo-mark-only.png",
+      "src": "hayvn-icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
