@@ -7,7 +7,7 @@
 [Check out my GitHub Profile](https://github.com/jdbostonbu-ops)
 🚀 **[Try the Live App](https://jdbostonbu-ops.github.io/Havn-V3/)**
 
-# HAVN — v3 (Deep Forest theme)
+# HAYVN — v3 (Deep Forest theme)
 
 Real-time community coordination app — mobile-first PWA prototype.
 Find food, shelter, healthcare, transit, clothing, warming, and cooling resources nearby.
