@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="HAVN-logo-wordmark.png" alt="Havn logo" width="800">
+  <img src="hayvn-logo.svg" alt="Havn logo" width="800">
 </p>
 
 ## 👤 Author

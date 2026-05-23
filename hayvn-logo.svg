@@ -1,0 +1,17 @@
+<svg width="1120" height="408" viewBox="0 0 1120 408" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HAYVN logo">
+  <title>HAYVN — Help nearby.</title>
+  <desc>HAYVN logo: a dark green panel with a rounded house-icon tile, the HAYVN wordmark in a white serif, and the tagline Help nearby in teal italic</desc>
+
+  <rect x="6" y="6" width="1108" height="396" rx="34" fill="#16402F" stroke="#E9E4D6" stroke-width="6"/>
+
+  <g>
+    <rect x="170" y="119" width="170" height="170" rx="40" fill="#26543F"/>
+    <path d="M199 212 L255 165 L311 212" fill="none" stroke="#FBF7EC" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M214 201 V255 H296 V201" fill="none" stroke="#FBF7EC" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="243" y="223" width="24" height="32" rx="3" fill="#FBF7EC"/>
+  </g>
+
+  <text x="392" y="232" font-family="Georgia, 'Times New Roman', serif" font-size="132" font-weight="700" fill="#FBF7EC" letter-spacing="2">HAYVN</text>
+
+  <text x="396" y="298" font-family="Georgia, 'Times New Roman', serif" font-size="44" font-style="italic" font-weight="700" fill="#3E9C86">Help nearby.</text>
+</svg>
